@@ -1,17 +1,16 @@
-
 # 🛡️ Azure Sentinel Home SOC Project
 
 ## Title
 Building and Visualizing a Cloud-Based Security Operations Center Using Azure Sentinel and a Honeypot VM
 
-
+---
 
 ## Introduction
 This project simulates a real-world Security Operations Center (SOC) using Microsoft Azure. I set up a Windows 10 honeypot virtual machine (VM), intentionally exposed to attract attackers. Logs from this VM are sent to Microsoft Sentinel through Log Analytics Workspace, where they are queried, analyzed, and visualized. The entire setup demonstrates core SOC principles like log collection, threat detection, data enrichment, and visualization.
 
 Led and executed by **Ibrahim Yusuf**, NACSS President, Cybersecurity and Cloud Enthusiast.
 
- **Credit**: Inspired by the YouTube tutorial by **Josh Madakor** – *Cyber Home Lab from ZERO and Catch Attackers! (2025)*  
+**Credit**: Inspired by the YouTube tutorial by **Josh Madakor** – *Cyber Home Lab from ZERO and Catch Attackers! (2025)*  
 [Watch the original video here](https://youtu.be/g5JL2RIbThM)
 
 ---
@@ -36,7 +35,7 @@ Led and executed by **Ibrahim Yusuf**, NACSS President, Cybersecurity and Cloud 
 - GeoIP Data (Watchlist CSV)
 - Draw.io (for architecture)
 
-
+---
 
 ## Step-by-Step Implementation
 
@@ -70,6 +69,28 @@ Led and executed by **Ibrahim Yusuf**, NACSS President, Cybersecurity and Cloud 
 - Joined attacker IPs with geographic metadata (city, country, lat/long).
 - Created a Sentinel workbook with a map visualization of attack sources.
 
+### 6. Automated Incident Response
+
+- Created a Logic App (playbook) triggered by alerts from Microsoft Sentinel.
+- Logic App sends email notifications containing alert name, severity, timestamp, and compromised entity.
+- Integrated `Send Data` action using Azure Log Analytics Data Collector API to log attacker metadata.
+- Used a `Compose` step to format the JSON payload:
+  ```json
+  {
+    "AlertName": "@{if(empty(triggerBody()?['AlertDisplayName']), 'UnknownAlert', triggerBody()?['AlertDisplayName'])}",
+    "Entity": "@{if(empty(triggerBody()?['CompromisedEntity']), 'UnknownEntity', triggerBody()?['CompromisedEntity'])}",
+    "Severity": "@{if(empty(triggerBody()?['Severity']), 'Unknown', triggerBody()?['Severity'])}",
+    "Time": "@{utcNow()}"
+  }
+  ```
+- Sent this payload to Log Analytics using `outputs('Compose')`, which created a custom log table: `TestIncidentLog_CL`.
+- Verified logs via:
+  ```kql
+  TestIncidentLog_CL
+  | sort by TimeGenerated desc
+  ```
+- Disabled notifications later to reduce noise, while keeping logging functional.
+
 ---
 
 ## Sample KQL Query
@@ -92,6 +113,7 @@ SecurityEvent
 - Successfully collected and visualized attacker login attempts.
 - Built a dynamic attack map showing source geolocation of failed RDP attempts.
 - Demonstrated ability to ingest, query, and enrich security logs in Sentinel.
+- Implemented a full incident response workflow, from alerting to automated logging.
 
 ---
 
@@ -105,20 +127,22 @@ SecurityEvent
 
 ## How to Showcase on Resume
 
-**Project**: Azure Sentinel SOC Lab
-**Tools**: Azure VM, Microsoft Sentinel, Log Analytics, AMA, KQL, GeoIP, Watchlist, Workbooks  
+**Project**: Azure Sentinel SOC Lab  
+**Tools**: Azure VM, Microsoft Sentinel, Log Analytics, AMA, KQL, GeoIP, Watchlist, Workbooks, Logic Apps  
 **Highlights**:
 - Built a honeypot VM to attract and study brute-force login attempts.
 - Enriched logs with geolocation and visualized attacks on a live map.
-- Implemented end-to-end SOC workflow from data collection to threat detection.
+- Created automated email alerts and log ingestion using Logic Apps and Azure Monitor.
+- Logged attacker metadata into a custom Log Analytics table for post-incident analysis.
 
 ---
 
 ## Conclusion
-This project was a deep dive into SOC workflows in the cloud. It allowed me to explore Microsoft Sentinel’s detection capabilities, log querying with KQL, and real-world attacker behavior. The experience has equipped me with the knowledge to investigate logs, automate response (planned), and create educational content around modern blue-team practices.
+This project was a deep dive into SOC workflows in the cloud. It allowed me to explore Microsoft Sentinel’s detection capabilities, log querying with KQL, and real-world attacker behavior. The experience has equipped me with the knowledge to investigate logs, automate response, and create educational content around modern blue-team practices.
 
 ---
 
 ## Author
 **Ibrahim Yusuf**  
-Cybersecurity Student | NACSS President | Cybersecruity and Cloud Enthusiast
+Cybersecurity Student | NACSS President | Cybersecurity and Cloud Enthusiast
+
